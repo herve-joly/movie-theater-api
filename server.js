@@ -1,14 +1,12 @@
 const express = require("express");
 const app = express();
-const { sequelize } = require("./db");
+const seed = require("./seed");
 
 const port = 3000;
 
 //TODO
-app.get("/musicians/:id", async (request, response) => {
-  response.send();
-});
+
 app.listen(port, () => {
-  sequelize.sync();
+  seed();
   console.log(`Listening on port ${port}`);
 });
