@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { Show } = require("../models/Show");
-const { sequelize } = require("sequelize");
+const { db } = require("../db");
 
 // GET all shows
 router.get("/", async (request, response) => {
@@ -14,20 +14,27 @@ router.get("/:id", async (request, response) => {
   response.send(respond);
 });
 // GET shows of a particular genre (genre in req.params)
-router.get("/:genre", async (request, response) => {
-  const findgenre = request.params.genre;
+router.get("/genre/:genre", async (request, response) => {
+  const genre = request.params.genre;
   const shows = await Show.findAll({
-    where: { genre: { [Op.iLike]: findgenre } },
+    where: {
+      genre: db.where(db.fn("LOWER", db.col("genre")), genre),
+    },
   });
   response.send(shows);
 });
 
 // PUT update rating of a show that has been watched
 router.put("/:id/rating", async (request, response) => {
-  const respond = await Show.update(request.body.update, {
-    where: request.body.where,
-  });
-  response.send(respond);
+  const { id } = request.params;
+  const { rating } = request.body;
+  await Show.update(
+    { rating },
+    {
+      where: { id },
+    }
+  );
+  response.send("Rating updated");
 });
 // PUT update the status of a show
 router.put("/:id", async (request, response) => {
@@ -40,11 +47,11 @@ router.put("/:id", async (request, response) => {
 });
 
 // DELETE a show
-router.delete("/:id/delete", async (request, response) => {
-  const respond = await Show.destroy({
+router.delete("/:id", async (request, response) => {
+  await Show.destroy({
     where: { id: request.params.id },
   });
-  response.json(respond);
+  response.send("Record deleted successfully.");
 });
 
 module.exports = router;
