@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { Show } = require("../models/Show");
 const { db } = require("../db");
+const { check, validationResult } = require("express-validator");
 
 // GET all shows
 router.get("/", async (request, response) => {
@@ -25,26 +26,44 @@ router.get("/genre/:genre", async (request, response) => {
 });
 
 // PUT update rating of a show that has been watched
-router.put("/:id/rating", async (request, response) => {
-  const { id } = request.params;
-  const { rating } = request.body;
-  await Show.update(
-    { rating },
-    {
-      where: { id },
+router.put(
+  "/:id/rating",
+  [check("rating").not().isEmpty().trim()],
+  async (request, response) => {
+    const errors = validationResult(request);
+    if (!errors.isEmpty()) {
+      response.send({ errors: errors.array() });
+    } else {
+      const { id } = request.params;
+      const { rating } = request.body;
+      await Show.update(
+        { rating },
+        {
+          where: { id },
+        }
+      );
+      response.send("Rating updated");
     }
-  );
-  response.send("Rating updated");
-});
+  }
+);
 // PUT update the status of a show
-router.put("/:id", async (request, response) => {
-  const { id } = request.params;
-  const { status } = request.body;
+router.put(
+  "/:id",
+  [check("status").not().isEmpty().trim()],
+  async (request, response) => {
+    const errors = validationResult(request);
+    if (!errors.isEmpty()) {
+      response.send({ errors: errors.array() });
+    } else {
+      const { id } = request.params;
+      const { status } = request.body;
 
-  const result = await Show.update({ status }, { where: { id } });
+      const result = await Show.update({ status }, { where: { id } });
 
-  response.send(result);
-});
+      response.send(result);
+    }
+  }
+);
 
 // DELETE a show
 router.delete("/:id", async (request, response) => {
